@@ -18,7 +18,7 @@ VIRUS TOTAL -** https://www.virustotal.com/gui/file/dc92fe3b53bb90aa2a3588fe968d
 
 
 
-запусти **run.bat**
+запусти **START_FIX.bat**
 
 
 
@@ -52,7 +52,7 @@ VIRUS TOTAL -** https://www.virustotal.com/gui/file/dc92fe3b53bb90aa2a3588fe968d
 
 
 
-снова запусти run.bat
+снова запусти START_FIX.bat
 
 **если хотите дать на чипсы, можете написать в тг @oyphy**
 

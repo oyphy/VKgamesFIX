@@ -1,7 +1,7 @@
 @echo off
 chcp 65001 >nul
 if /i not "%~1"=="go" (
-  cmd /k ""%~f0" go"
+  start "VK Play Machine Fix" cmd.exe /k call "%~f0" go
   exit /b
 )
 setlocal
