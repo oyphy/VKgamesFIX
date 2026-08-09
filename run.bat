@@ -1,9 +1,33 @@
 @echo off
 chcp 65001 >nul
-if /i not "%~1"=="go" (
-  powershell.exe -NoLogo -NoExit -ExecutionPolicy Bypass -Command "& '%~f0' go"
-  exit /b
-)
+set "VKPM_BAT=%~f0"
+set "VKPM_DIR=%~dp0"
+if /i "%~1"=="go" goto work
+if /i "%~1"=="user" goto user
+
+powershell.exe -NoProfile -Command "$p=[Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent(); if($p.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)){exit 0}else{exit 1}"
+if errorlevel 1 goto user
+
+echo.
+echo фикс запустился от админа, перезапускаю с обычными правами...
+powershell.exe -NoProfile -Command "$s=New-Object -ComObject Shell.Application; $s.ShellExecute($env:VKPM_BAT,'user',$env:VKPM_DIR,'open',1)"
+exit /b
+
+:user
+powershell.exe -NoProfile -Command "$p=[Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent(); if($p.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)){exit 0}else{exit 1}"
+if not errorlevel 1 goto nouser
+powershell.exe -NoLogo -NoExit -ExecutionPolicy Bypass -Command "& $env:VKPM_BAT go"
+exit /b
+
+:nouser
+echo.
+echo не получилось убрать права администратора
+echo включи UAC и перезагрузи компьютер
+echo.
+pause
+exit /b 1
+
+:work
 setlocal
 cd /d "%~dp0"
 title VK Play Machine Fix

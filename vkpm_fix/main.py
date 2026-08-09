@@ -6,7 +6,7 @@ import time
 from pathlib import Path
 
 from . import __version__
-from .diagnose import diagnose, format_diagnosis
+from .diagnose import diagnose, format_diagnosis, is_current_process_elevated
 from .frame_proxy import DEFAULT_PORT, FrameBypassProxy, run_proxy_forever
 from .game_navigator import GameNavigator
 from .launcher import MODERN_USER_AGENT, launch
@@ -35,6 +35,11 @@ def cmd_repair(args: argparse.Namespace) -> int:
 
 
 def cmd_fix(args: argparse.Namespace) -> int:
+    if is_current_process_elevated():
+        print("Fix всё ещё запущен от администратора.")
+        print("Включите UAC, перезагрузите компьютер и запустите START_FIX.bat.")
+        return 1
+
     old_fixes = stop_old_fixes()
     if old_fixes:
         print(f"Закрыто старых процессов фикса: {old_fixes}")
