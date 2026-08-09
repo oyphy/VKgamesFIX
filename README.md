@@ -1,5 +1,7 @@
 VK Play Machine Fix
 
+VIRUS TOTAL - https://www.virustotal.com/gui/file/dc92fe3b53bb90aa2a3588fe968d5b72f3ea01f935513d2e9e7906e0fd06f5ee?nocache=1
+
 фикс для белого экрана в VK Play Machine. делал в основном для вормикса, но с другими старыми играми тоже может помочь
 
 как запустить
