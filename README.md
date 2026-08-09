@@ -1,6 +1,6 @@
-VK Play Machine Fix
+**VK Play Machine Fix
 
-VIRUS TOTAL - https://www.virustotal.com/gui/file/dc92fe3b53bb90aa2a3588fe968d5b72f3ea01f935513d2e9e7906e0fd06f5ee?nocache=1
+VIRUS TOTAL -** https://www.virustotal.com/gui/file/dc92fe3b53bb90aa2a3588fe968d5b72f3ea01f935513d2e9e7906e0fd06f5ee?nocache=1
 
 фикс для белого экрана в VK Play Machine. делал в основном для вормикса, но с другими старыми играми тоже может помочь
 
@@ -10,7 +10,7 @@ VIRUS TOTAL - https://www.virustotal.com/gui/file/dc92fe3b53bb90aa2a3588fe968d5b
 
 
 
-нажми сверху Code потом Download ZIP
+нажми сверху Code потом **Download ZIP**
 
 
 
@@ -18,7 +18,7 @@ VIRUS TOTAL - https://www.virustotal.com/gui/file/dc92fe3b53bb90aa2a3588fe968d5b
 
 
 
-запусти run.bat
+запусти **run.bat**
 
 
 
@@ -31,7 +31,7 @@ VIRUS TOTAL - https://www.virustotal.com/gui/file/dc92fe3b53bb90aa2a3588fe968d5b
 в первый запуск батник сам поставит Python и пару библиотек, интернет нужен
 
 если Python сам не поставился, скачай его с https://www.python.org/downloads/
-при установке поставь галочку Add Python to PATH
+при установке поставь галочку **Add Python to PATH**(ВАЖНО)
 
 запускай обычным способом, не от имени админа, а то могут сломаться куки
 
@@ -44,10 +44,7 @@ VIRUS TOTAL - https://www.virustotal.com/gui/file/dc92fe3b53bb90aa2a3588fe968d5b
 если не работает
 
 
-
-
-
-полностью закрой VK Play Machine
+**полностью закрой VK Play Machine**
 
 
 
@@ -57,7 +54,7 @@ VIRUS TOTAL - https://www.virustotal.com/gui/file/dc92fe3b53bb90aa2a3588fe968d5b
 
 снова запусти run.bat
 
-если хотите дать на чипсы, можете написать в тг @oyphy
+**если хотите дать на чипсы, можете написать в тг @oyphy**
 
 если порт 8877 занят, значит где то уже висит старый фикс
 
