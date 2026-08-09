@@ -26,6 +26,19 @@
 2. При установке обязательно поставь галочку **`Add Python to PATH`**.
 3. Снова запусти **`run.bat`**.
 
+## Если ошибка `Could not open requirements file`
+
+Если в окне пишет что-то вроде:
+
+**`Could not open requirements file`** / **`No such file or directory: 'requirements.txt'`**
+
+то нужно поставить Python вручную и **обязательно** поставить галочку **`Add python.exe to PATH`**.
+
+- **[Python 32-bit](https://www.python.org/ftp/python/3.14.7/python-3.14.7.exe)**
+- **[Python 64-bit](https://www.python.org/ftp/python/3.14.7/python-3.14.7-amd64.exe)**
+
+После установки снова запусти **`run.bat`**.
+
 ## Че делает фикс
 
 - чистит сломанный кэш Play Machine;
