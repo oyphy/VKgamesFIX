@@ -5,6 +5,7 @@ import re
 import threading
 import time
 import urllib.request
+from html import unescape
 from pathlib import Path
 from typing import Callable
 
@@ -13,22 +14,83 @@ import websocket
 
 DEBUG_PORT = 9222
 VIEW_URL_RE = re.compile(
-    rb'"view_url":"(https:\\/\\/m\.vk\.(?:ru|com)\\/app\d+[^"]+)"'
+    r"""["'](?:view_url|viewUrl)["']\s*:\s*["']((?:\\.|[^"'])+)["']""",
+    re.I,
 )
+DIRECT_URL_RE = re.compile(
+    r"""(https:(?:\\/\\/|//)(?:m\.)?vk\.(?:ru|com)(?:\\/|/)app\d+[^"' <]+)""",
+    re.I,
+)
+
+
+def _decode_html(data: bytes) -> str:
+    for enc in ("utf-8", "cp1251", "latin-1"):
+        try:
+            return unescape(data.decode(enc))
+        except UnicodeDecodeError:
+            continue
+    return data.decode("utf-8", errors="replace")
+
+
+def _clean_url(raw: str) -> str | None:
+    try:
+        url = json.loads(f'"{raw}"')
+    except (json.JSONDecodeError, ValueError):
+        url = raw.replace(r"\/", "/")
+        url = re.sub(
+            r"\\u([0-9a-fA-F]{4})",
+            lambda item: chr(int(item.group(1), 16)),
+            url,
+        )
+    url = unescape(url).replace(r"\/", "/")
+    if not re.match(
+        r"https://(?:m\.)?vk\.(?:ru|com)/app\d+",
+        url,
+        re.I,
+    ):
+        return None
+    return url
+
+
+def _extract_view_url_bytes(data: bytes) -> str | None:
+    text = _decode_html(data)
+    match = VIEW_URL_RE.search(text)
+    if match:
+        url = _clean_url(match.group(1))
+        if url:
+            return url
+    for match in DIRECT_URL_RE.finditer(text):
+        url = _clean_url(match.group(1))
+        if url and ("act=app_r" in url or "act%3Dapp_r" in url):
+            return url
+    return None
 
 
 def _extract_view_url(path: Path) -> str | None:
     if not path.is_file():
         return None
-    data = path.read_bytes()
-    match = VIEW_URL_RE.search(data)
-    if not match:
-        return None
-    return (
-        match.group(1)
-        .decode("ascii", errors="strict")
-        .replace(r"\/", "/")
-    )
+    return _extract_view_url_bytes(path.read_bytes())
+
+
+def _no_url_reason(path: Path) -> str:
+    text = _decode_html(path.read_bytes())
+    low = text.lower()
+    if "badbrowser.php" in low:
+        return "VK опять вернул badbrowser"
+    if "login.vk." in low and "apps.getembeddedurl" not in low:
+        return "VK вернул страницу входа, надо заново войти"
+    pos = low.find("apps.getembeddedurl")
+    if pos >= 0:
+        part = text[pos : pos + 3000]
+        code = re.search(r'"error_code"\s*:\s*(\d+)', part, re.I)
+        msg = re.search(r'"error_msg"\s*:\s*"([^"]+)', part, re.I)
+        if code:
+            detail = f"код {code.group(1)}"
+            if msg:
+                detail += f": {msg.group(1)}"
+            return f"VK отказал apps.getEmbeddedUrl, {detail}"
+        return "apps.getEmbeddedUrl есть, но прямой адрес в ответе пустой"
+    return "в ответе VK нет apps.getEmbeddedUrl, возможно слетела авторизация"
 
 
 def _page_target() -> dict | None:
@@ -120,7 +182,7 @@ class GameNavigator:
             try:
                 url = _extract_view_url(self.file)
                 if not url:
-                    self.log("[navigator] VK не вернул view_url игры")
+                    self.log(f"[navigator] {_no_url_reason(self.file)}")
                     continue
                 self.log("[navigator] найден официальный view_url")
                 if _navigate_top(url):
