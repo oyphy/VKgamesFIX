@@ -51,13 +51,25 @@ def cmd_fix(args: argparse.Namespace) -> int:
     navigator = None
     if proxy_port is not None:
         print("--- proxy ---")
-        proxy = FrameBypassProxy(port=proxy_port, user_agent=ua)
-        try:
-            proxy.start()
-        except OSError as exc:
-            print(f"Не удалось запустить прокси на порту {proxy_port}: {exc}")
-            print("Закройте старый процесс или укажите --proxy-port другой.")
+        first_port = proxy_port
+        last_error = None
+        for port in range(first_port, min(first_port + 20, 65536)):
+            item = FrameBypassProxy(port=port, user_agent=ua)
+            try:
+                item.start()
+            except OSError as exc:
+                last_error = exc
+                item.stop()
+                print(f"Порт {port} занят, пробую следующий...")
+                continue
+            proxy = item
+            proxy_port = port
+            break
+        if proxy is None:
+            print(f"Не нашёл свободный порт: {last_error}")
             return 1
+        if proxy_port != first_port:
+            print(f"Старый фикс ещё запущен. Использую порт {proxy_port}.")
         time.sleep(0.3)
         debug_html = (
             Path(__file__).resolve().parent.parent
