@@ -21,6 +21,11 @@ DIRECT_URL_RE = re.compile(
     r"""(https:(?:\\/\\/|//)(?:m\.)?vk\.(?:ru|com)(?:\\/|/)app\d+[^"' <]+)""",
     re.I,
 )
+APP_METHOD_RE = re.compile(
+    r"""apps\.getEmbeddedUrl.{0,1000}?["']app_id["']\s*:\s*["']?(\d+)""",
+    re.I | re.S,
+)
+APP_URL_RE = re.compile(r"""(?:vk\.(?:ru|com)(?:\\/|/)|/)app(\d{5,})""", re.I)
 
 
 def _decode_html(data: bytes) -> str:
@@ -72,6 +77,18 @@ def _extract_view_url(path: Path) -> str | None:
     return _extract_view_url_bytes(path.read_bytes())
 
 
+def _extract_app_id_bytes(data: bytes) -> str | None:
+    text = _decode_html(data)
+    match = APP_METHOD_RE.search(text)
+    if not match:
+        match = APP_URL_RE.search(text)
+    return match.group(1) if match else None
+
+
+def _extract_app_id(path: Path) -> str | None:
+    return _extract_app_id_bytes(path.read_bytes())
+
+
 def _no_url_reason(path: Path) -> str:
     text = _decode_html(path.read_bytes())
     low = text.lower()
@@ -116,7 +133,7 @@ def _browser_view_url() -> str | None:
         )
     except (OSError, websocket.WebSocketException):
         return None
-    contexts: list[int] = []
+    contexts: list[tuple[int, str]] = []
     try:
         ws.settimeout(0.4)
         ws.send(json.dumps({"id": 1, "method": "Runtime.enable", "params": {}}))
@@ -133,21 +150,35 @@ def _browser_view_url() -> str | None:
             if message.get("method") == "Runtime.executionContextCreated":
                 context = message["params"]["context"]
                 if context.get("auxData", {}).get("isDefault"):
-                    contexts.append(context["id"])
+                    contexts.append(
+                        (context["id"], str(context.get("origin", "")))
+                    )
 
         expression = (
             "(function(){"
             "var c=window.cur&&window.cur.apiPrefetchCache;"
-            "if(!Array.isArray(c))return '';"
+            "if(Array.isArray(c)){"
             "for(var i=0;i<c.length;i++){"
             "var x=c[i];"
             "if(x&&x.method==='apps.getEmbeddedUrl'&&x.response&&"
             "x.response.view_url)return x.response.view_url;"
+            "}}"
+            "var id=location.pathname.match(/^\\/app(\\d+)/);"
+            "if(/^m\\.vk\\.(ru|com)$/.test(location.hostname)&&id){"
+            "return fetch('/app'+id[1]+'?act=app_r&lang=ru',"
+            "{credentials:'include'}).then(function(r){return r.text();})"
+            ".then(function(t){"
+            "var m=t.match(/[\"']view_url[\"']\\s*:\\s*[\"']([^\"']+)/i);"
+            "return m?m[1]:'';"
+            "}).catch(function(){return '';});"
             "}return '';"
             "})()"
         )
         msg_id = 10
-        for context_id in contexts:
+        ws.settimeout(6)
+        for context_id, origin in contexts:
+            if not re.match(r"https://(?:m\.)?vk\.(?:ru|com)$", origin, re.I):
+                continue
             msg_id += 1
             ws.send(
                 json.dumps(
@@ -158,11 +189,12 @@ def _browser_view_url() -> str | None:
                             "expression": expression,
                             "contextId": context_id,
                             "returnByValue": True,
+                            "awaitPromise": True,
                         },
                     }
                 )
             )
-            end = time.time() + 1
+            end = time.time() + 6
             while time.time() < end:
                 try:
                     message = json.loads(ws.recv())
@@ -194,7 +226,17 @@ def _navigate_top(url: str) -> bool:
     current = str(target.get("url", ""))
     if current == url:
         return True
-    if "gameroom.games.mail.ru/app" not in current:
+    can_move = (
+        "gameroom.games.mail.ru/app" in current
+        or bool(
+            re.match(
+                r"https://m\.vk\.(?:ru|com)/app\d+",
+                current,
+                re.I,
+            )
+        )
+    )
+    if not can_move:
         return False
 
     ws = websocket.create_connection(
@@ -272,6 +314,24 @@ class GameNavigator:
                         url = _browser_view_url()
                         if url:
                             break
+                    if not url:
+                        app_id = _extract_app_id(self.file)
+                        if app_id:
+                            direct = (
+                                f"https://m.vk.ru/app{app_id}"
+                                "?act=app_r&lang=ru"
+                            )
+                            self.log(
+                                "[navigator] открываю мобильный маршрут "
+                                "для нового api_hash…"
+                            )
+                            if _navigate_top(direct):
+                                for _ in range(12):
+                                    if self._stop.wait(0.7):
+                                        return
+                                    url = _browser_view_url()
+                                    if url and url != direct:
+                                        break
                     if not url:
                         self.log(f"[navigator] {_no_url_reason(self.file)}")
                         continue
