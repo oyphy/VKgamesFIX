@@ -1,5 +1,10 @@
 @echo off
 chcp 65001 >nul
+if /i not "%~1"=="go" (
+  cmd /k ""%~f0" go"
+  exit /b
+)
+setlocal
 cd /d "%~dp0"
 title VK Play Machine Fix
 
@@ -42,7 +47,7 @@ echo щас поставлю что нужно и запущу машину
 echo это окно потом не закрывай пока играешь
 echo.
 
-%py% -m pip install -r requirements.txt --disable-pip-version-check
+"%py%" -m pip install -r requirements.txt --disable-pip-version-check
 if errorlevel 1 (
   echo.
   echo не получилось поставить библиотеки
@@ -52,7 +57,8 @@ if errorlevel 1 (
 )
 
 echo.
-%py% -m vkpm_fix fix
+"%py%" -m vkpm_fix fix
 echo.
 echo фикс остановлен
 pause
+endlocal
