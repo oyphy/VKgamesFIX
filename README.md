@@ -5,14 +5,15 @@
 
 ## Скачать
 
-- **[Скачать последнюю версию v1.4.8](https://github.com/oyphy/VKgamesFIX/releases/download/v1.4.8/VKgamesFIX-v1.4.8.zip)**
-- [Проверка старой сборки на VirusTotal](https://www.virustotal.com/gui/file/dc92fe3b53bb90aa2a3588fe968d5b72f3ea01f935513d2e9e7906e0fd06f5ee?nocache=1)
+- **[Скачать последнюю версию v1.4.9](https://github.com/oyphy/VKgamesFIX/releases/download/v1.4.9/VKgamesFIX-v1.4.9.zip)**
+- **[Проверка последней версии на VirusTotal](https://www.virustotal.com/gui/file-analysis/YWE0NTNlMjk1Zjc0NmNlZjUzZWM2ZDA0ZDY5YzU1ZjU6MTc4NjI4MTY0Nw==)**
+- **[ВИДЕО ТУТОР](https://t.me/playmachin/2)**
 
 ## Как запустить
 
 1. Скачай архив по ссылке выше.
 2. **Полностью распакуй архив** в любую папку.
-3. Запусти **`START_FIX.bat`**.
+3. Запусти **`run.bat`**.
 4. Подожди пока поставится Python и нужные библиотеки.
 5. Когда откроется VK Play Machine — запускай игру.
 
@@ -23,7 +24,7 @@
 
 1. Скачай его с [официального сайта](https://www.python.org/downloads/).
 2. При установке обязательно поставь галочку **`Add Python to PATH`**.
-3. Снова запусти **`START_FIX.bat`**.
+3. Снова запусти **`run.bat`**.
 
 ## Че делает фикс
 
@@ -44,7 +45,7 @@
 1. Полностью закрой **VK Play Machine**.
 2. Закрой все старые окна фикса.
 3. Распакуй свежую версию в новую папку.
-4. Запусти **`START_FIX.bat`** ещё раз.
+4. Запусти **`run.bat`** ещё раз.
 5. Не закрывай окно с логами — там будет написана ошибка.
 
 Если старый фикс остался висеть в фоне, новая версия сама попробует его закрыть.  
