@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import ctypes
 import subprocess
+import time
 from ctypes import wintypes
 from pathlib import Path
 
@@ -119,6 +120,10 @@ def launch(
             close_fds=True,
         )
         _kill_with_parent(process)
+        time.sleep(1.5)
+        code = process.poll()
+        if code is not None:
+            return False, f"VKApp.exe закрылся сразу после запуска, код {code}"
     except OSError as exc:
         return False, f"Не удалось запустить: {exc}"
 

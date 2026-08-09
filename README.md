@@ -5,7 +5,7 @@
 
 ## Скачать
 
-- **[Скачать последнюю версию v1.4.6](https://github.com/oyphy/VKgamesFIX/releases/download/v1.4.6/VKgamesFIX-v1.4.6.zip)**
+- **[Скачать последнюю версию v1.4.7](https://github.com/oyphy/VKgamesFIX/releases/download/v1.4.7/VKgamesFIX-v1.4.7.zip)**
 - [Проверка старой сборки на VirusTotal](https://www.virustotal.com/gui/file/dc92fe3b53bb90aa2a3588fe968d5b72f3ea01f935513d2e9e7906e0fd06f5ee?nocache=1)
 
 ## Как запустить

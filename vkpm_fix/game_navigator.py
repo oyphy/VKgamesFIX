@@ -75,10 +75,6 @@ def _extract_view_url(path: Path) -> str | None:
 def _no_url_reason(path: Path) -> str:
     text = _decode_html(path.read_bytes())
     low = text.lower()
-    if "badbrowser.php" in low:
-        return "VK опять вернул badbrowser"
-    if "login.vk." in low and "apps.getembeddedurl" not in low:
-        return "VK вернул страницу входа, надо заново войти"
     pos = low.find("apps.getembeddedurl")
     if pos >= 0:
         part = text[pos : pos + 3000]
@@ -90,6 +86,10 @@ def _no_url_reason(path: Path) -> str:
                 detail += f": {msg.group(1)}"
             return f"VK отказал apps.getEmbeddedUrl, {detail}"
         return "apps.getEmbeddedUrl есть, но прямой адрес в ответе пустой"
+    if "login.vk." in low:
+        return "VK вернул страницу входа, надо заново войти"
+    if "badbrowser.php" in low:
+        return "VK опять вернул badbrowser"
     return "в ответе VK нет apps.getEmbeddedUrl, возможно слетела авторизация"
 
 
@@ -102,6 +102,89 @@ def _page_target() -> dict | None:
     except (OSError, ValueError):
         return None
     return next((item for item in targets if item.get("type") == "page"), None)
+
+
+def _browser_view_url() -> str | None:
+    target = _page_target()
+    if not target:
+        return None
+    try:
+        ws = websocket.create_connection(
+            target["webSocketDebuggerUrl"],
+            timeout=2,
+            origin=f"http://127.0.0.1:{DEBUG_PORT}",
+        )
+    except (OSError, websocket.WebSocketException):
+        return None
+    contexts: list[int] = []
+    try:
+        ws.settimeout(0.4)
+        ws.send(json.dumps({"id": 1, "method": "Runtime.enable", "params": {}}))
+        end = time.time() + 1.2
+        while time.time() < end:
+            try:
+                message = json.loads(ws.recv())
+            except (
+                json.JSONDecodeError,
+                OSError,
+                websocket.WebSocketException,
+            ):
+                break
+            if message.get("method") == "Runtime.executionContextCreated":
+                context = message["params"]["context"]
+                if context.get("auxData", {}).get("isDefault"):
+                    contexts.append(context["id"])
+
+        expression = (
+            "(function(){"
+            "var c=window.cur&&window.cur.apiPrefetchCache;"
+            "if(!Array.isArray(c))return '';"
+            "for(var i=0;i<c.length;i++){"
+            "var x=c[i];"
+            "if(x&&x.method==='apps.getEmbeddedUrl'&&x.response&&"
+            "x.response.view_url)return x.response.view_url;"
+            "}return '';"
+            "})()"
+        )
+        msg_id = 10
+        for context_id in contexts:
+            msg_id += 1
+            ws.send(
+                json.dumps(
+                    {
+                        "id": msg_id,
+                        "method": "Runtime.evaluate",
+                        "params": {
+                            "expression": expression,
+                            "contextId": context_id,
+                            "returnByValue": True,
+                        },
+                    }
+                )
+            )
+            end = time.time() + 1
+            while time.time() < end:
+                try:
+                    message = json.loads(ws.recv())
+                except (
+                    json.JSONDecodeError,
+                    OSError,
+                    websocket.WebSocketException,
+                ):
+                    break
+                if message.get("id") != msg_id:
+                    continue
+                value = (
+                    message.get("result", {})
+                    .get("result", {})
+                    .get("value")
+                )
+                if isinstance(value, str) and value:
+                    return _clean_url(value)
+                break
+    finally:
+        ws.close()
+    return None
 
 
 def _navigate_top(url: str) -> bool:
@@ -182,8 +265,16 @@ class GameNavigator:
             try:
                 url = _extract_view_url(self.file)
                 if not url:
-                    self.log(f"[navigator] {_no_url_reason(self.file)}")
-                    continue
+                    self.log("[navigator] жду прямой адрес от VK…")
+                    for _ in range(10):
+                        if self._stop.wait(0.7):
+                            return
+                        url = _browser_view_url()
+                        if url:
+                            break
+                    if not url:
+                        self.log(f"[navigator] {_no_url_reason(self.file)}")
+                        continue
                 self.log("[navigator] найден официальный view_url")
                 if _navigate_top(url):
                     self.log(
