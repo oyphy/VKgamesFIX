@@ -5,7 +5,7 @@
 
 ## Скачать
 
-- **[Скачать последнюю версию v1.4.9](https://github.com/oyphy/VKgamesFIX/releases/download/v1.4.9/VKgamesFIX-v1.4.9.zip)**
+- **[Скачать последнюю версию v1.4.8](https://github.com/oyphy/VKgamesFIX/releases/download/v1.4.8/VKgamesFIX-v1.4.8.zip)**
 - **[Проверка последней версии на VirusTotal](https://www.virustotal.com/gui/file-analysis/YWE0NTNlMjk1Zjc0NmNlZjUzZWM2ZDA0ZDY5YzU1ZjU6MTc4NjI4MTY0Nw==)**
 - **[ВИДЕО ТУТОР](https://t.me/playmachin/2)**
 
