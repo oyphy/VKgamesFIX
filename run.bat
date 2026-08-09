@@ -1,7 +1,7 @@
 @echo off
 chcp 65001 >nul
 if /i not "%~1"=="go" (
-  start "VK Play Machine Fix" powershell.exe -NoLogo -NoExit -ExecutionPolicy Bypass -Command "& '%~f0' go"
+  powershell.exe -NoLogo -NoExit -ExecutionPolicy Bypass -Command "& '%~f0' go"
   exit /b
 )
 setlocal

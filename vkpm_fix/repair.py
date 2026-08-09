@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 import shutil
 import subprocess
 import time
@@ -16,6 +17,29 @@ CACHE_SUBDIRS = (
     "GPUCache",
     "Code Cache",
 )
+
+
+def stop_old_fixes() -> int:
+    pid = os.getpid()
+    code = (
+        "Get-CimInstance Win32_Process | Where-Object { "
+        f"$_.ProcessId -ne {pid} -and "
+        "$_.Name -match '^python(w)?\\.exe$' -and "
+        "$_.CommandLine -match '-m\\s+vkpm_fix\\s+(fix|proxy)' "
+        "} | ForEach-Object { "
+        "$_.ProcessId; Stop-Process -Id $_.ProcessId -Force "
+        "}"
+    )
+    try:
+        result = subprocess.run(
+            ["powershell.exe", "-NoProfile", "-Command", code],
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+    except OSError:
+        return 0
+    return len([line for line in result.stdout.splitlines() if line.strip().isdigit()])
 
 
 def stop_vkapp(timeout_sec: float = 15.0) -> bool:

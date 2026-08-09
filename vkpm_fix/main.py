@@ -11,7 +11,7 @@ from .frame_proxy import DEFAULT_PORT, FrameBypassProxy, run_proxy_forever
 from .game_navigator import GameNavigator
 from .launcher import MODERN_USER_AGENT, launch
 from .paths import require_install_dir
-from .repair import repair, stop_vkapp
+from .repair import repair, stop_old_fixes, stop_vkapp
 from .ua_patch import patch_libcef, restore_libcef
 
 
@@ -35,6 +35,10 @@ def cmd_repair(args: argparse.Namespace) -> int:
 
 
 def cmd_fix(args: argparse.Namespace) -> int:
+    old_fixes = stop_old_fixes()
+    if old_fixes:
+        print(f"Закрыто старых процессов фикса: {old_fixes}")
+
     install = require_install_dir(args.path)
     report = diagnose(install)
     print(format_diagnosis(report))
@@ -98,6 +102,7 @@ def cmd_fix(args: argparse.Namespace) -> int:
                 time.sleep(1)
         except KeyboardInterrupt:
             print("\nОстанавливаю...")
+        finally:
             stop_vkapp()
             if navigator:
                 navigator.stop()
